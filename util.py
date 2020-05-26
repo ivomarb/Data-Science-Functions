@@ -43,3 +43,105 @@ def numeric_exploratory_data_analysis(dataset, generate_csv=False, print_statist
         numeric_analysis.to_csv(path_or_buf='numeric_analysis' + dataset_name  + '.csv')
 
     return numeric_analysis
+
+def get_numerical_columns_names(dataset):
+    """
+    Get the names of columns with numerical features
+
+    Args:
+        dataset (DataFrame): data
+
+    Returns:
+        list: list with names of numerical columns
+    """
+    import pandas as pd
+    
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+
+    numerical_features = dataset.select_dtypes(include=["int64", "float64"]).columns
+    return numerical_features
+
+def replace_zero_values_to_nan(dataset, feature_names):
+    """
+    Replace all features present in feature_names with 0 to np.NaN.
+
+    E.g., to be replace afterwards by mean values or dropped.
+    """
+    import pandas as pd
+    import numpy as np
+    
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+    assert isinstance(feature_names, (list, tuple))
+    
+    for feature_name in feature_names:
+
+        if feature_name in dataset:
+            dataset[feature_name].replace(0, np.NaN, inplace=True)
+        else:
+            raise Exception('Error: ' + feature_name + ' not in dataset.')
+            
+def replace_nan_values_to_constant(dataset, feature_names, constant=0):
+    """
+    Replace all features present in feature_names with np.NaN to 0.
+
+    Sometimes even by using a methodology to replace NaN values a few remain,
+    we can be interesting to replace them to a constant afterwards.
+    """
+    import pandas as pd
+    import numpy as np
+    
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+    assert isinstance(feature_names, (list, tuple))
+    assert isinstance(constant, int)
+
+    for feature_name in feature_names:
+
+        if feature_name in dataset:
+            dataset[feature_name].replace(np.NaN, constant, inplace=True)
+
+    return dataset
+
+def equalize_classes_by_frac_of_minority_class(X, y, label, frac=1.0):
+    """
+    Equalize classes by fraction of minority class.
+    """
+    import pandas as pd
+    import numpy as np
+    
+    assert isinstance(X, pd.core.frame.DataFrame)
+    assert isinstance(y, pd.core.frame.DataFrame)
+    assert isinstance(frac, float)
+
+    num_neg = (y == 0).sum()
+    num_pos = (y == 1).sum()
+    num_min = np.min([num_neg, num_pos])
+    num_max = np.max([num_neg, num_pos])
+
+    dataset_full = X
+    dataset_full[label] = y
+
+    frac_to_remove = 1 - frac * num_min / num_max
+
+    if num_neg > num_pos:
+        dataset_full.drop(dataset_full.query(label == 0).sample(a_frac=frac_to_remove).index, inplace=True)
+    else:
+        dataset_full.drop(dataset_full.query(label == 1).sample(a_frac=frac_to_remove).index, inplace=True)
+
+    
+    y = dataset_full[label]
+    X = dataset_full.loc[:, dataset_full.columns != label]
+
+    return (X, y)
+
+def util_save_model_pkl(model, model_name):
+    """
+    Save a model from sklearn as a pickle
+
+    Args:
+        model (sklearn model) : model of sklearn (can be regression or classification model)
+        model_name (string): name of the model file, e.g., folder/model.pkl
+    """
+    assert isinstance(model_name, object)
+
+    from sklearn.externals import joblib
+    joblib.dump(model, model_name)
