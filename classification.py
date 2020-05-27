@@ -387,7 +387,7 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_details=True):
 
     return output_scores_dataset
 
-def train_test_split_for_classification(dataset, test_size, random_state):
+def train_test_split_for_classification(dataset, label, test_size, random_state):
     """
     Selects X and y, considering that y has been renamed to label.
     """
@@ -397,7 +397,7 @@ def train_test_split_for_classification(dataset, test_size, random_state):
     assert isinstance(test_size, float)
     assert isinstance(random_state, int)
 
-    X = dataset.loc[:, dataset.columns != g_label]
+    X = dataset.loc[:, dataset.columns != label]
     y = dataset[g_label]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state,
                                                         stratify=y)
