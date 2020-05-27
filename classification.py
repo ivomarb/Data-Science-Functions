@@ -6,6 +6,101 @@ import matplotlib.pyplot as plt
 # CLASSIFICATION METHODS
 #############################################################################################################
 
+def cross_validation(model, name, X, y):
+    """
+    Compute kfold cross validation
+    Args:
+        model: model to fit
+        name: name of the model
+        X: dataset with features
+        y: labels
+    """
+    assert isinstance(X, pd.core.frame.DataFrame)
+    assert isinstance(y, pd.core.frame.Series)
+
+    log_method_execution_time(log_funcname())
+
+    from sklearn import model_selection
+
+    scoring = 'f1'
+    if 'random_state' in model.get_params():
+        model.random_state = 0
+
+    kfold = model_selection.KFold(n_splits=10, random_state=0)
+    cv_results = model_selection.cross_val_score(model, X, y, cv=kfold, scoring=scoring)
+    msg = "%s: %.3f (%.3f)" % (name, cv_results.mean(), cv_results.std())
+    print(msg)
+
+    return cv_results
+
+def cv_compare_all_classifiers(X_train, y_train):
+    """
+    Cross validation of all classifiers of sklearn
+    Args:
+        X_train, y_train: The train dataset.
+    """
+    assert isinstance(X_train, pd.core.frame.DataFrame)
+    assert isinstance(y_train, pd.core.frame.Series)
+
+    from sklearn.utils.testing import all_estimators
+    from sklearn import model_selection
+    from xgboost import XGBClassifier
+
+    models = all_estimators(type_filter='classifier')
+    models.append(('XGBClassifier', XGBClassifier()))
+    results = []
+    names = []
+    scoring = 'f1'
+
+    for name, model in models:
+        if (name == 'MultinomialNB' or name == 'NuSVC' or name == 'RadiusNeighborsClassifier' or
+                name == 'GaussianProcessClassifier' or name == 'QuadraticDiscriminantAnalysis'):
+            continue
+
+        if name != 'XGBClassifier':
+            model = model()
+        if 'random_state' in model.get_params():
+            model.random_state = 0
+
+        kfold = model_selection.KFold(n_splits=10, random_state=0)
+        cv_results = model_selection.cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
+
+        results.append(cv_results)
+        names.append(name)
+        msg = "%s: %.2f (%.2f)" % (name, cv_results.mean(), cv_results.std())
+        print(msg)
+
+    plot_classifier_comparison(results, names)
+    return results, names
+
+def cv_compare_classifiers(models, names, X_train, y_train):
+    """
+    Cross validation of several classifiers
+    Args:
+        models: list of models
+        names: names of the models
+        X_train, y_train: The train dataset.
+    """
+    assert isinstance(X_train, pd.core.frame.DataFrame)
+    assert isinstance(y_train, pd.core.frame.Series)
+
+    from sklearn import model_selection
+    from src.util.acq_util import RANDOM_SEED
+    scoring = 'f1'
+    results = []
+    for name, model in zip(names, models):
+        if 'random_state' in model.get_params():
+            model.random_state = 0
+
+        kfold = model_selection.KFold(n_splits=10, random_state=0)
+        cv_results = model_selection.cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
+
+        results.append(cv_results)
+        msg = "%s: %.2f (%.2f)" % (name, cv_results.mean(), cv_results.std())
+        print(msg)
+
+    return results, names
+
 def fit_predict_plot(X_train, X_test, y_train, y_test, models, print_only_table=False):
     """
     Fits the l_model using the X_train and y_train datasets. Accuracy on the train and test sets.
@@ -213,6 +308,84 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_output_scores_to
         output_scores_df.to_csv(time.strftime('output_scores' + str(output_scores_csv_file_suffix) + '.csv')
 
     return output_scores_df
+
+def run_all_classifiers(X_train, X_test, y_train, y_test, print_details=True):
+    """
+    Run all classifiers of sklearn
+
+    Args:
+        X_train, X_test, y_train, y_test: The train and tests datasets.
+        print_details: if true, print details of all models and save csv table ;
+                       if false, print only table with summary of the models
+    Returns:
+        dataset: Returns output scores dataset.
+
+    """
+    assert isinstance(X_train, pd.core.frame.DataFrame)
+    assert isinstance(X_test, pd.core.frame.DataFrame)
+    assert isinstance(y_train, pd.core.frame.Series)
+    assert isinstance(y_test, pd.core.frame.Series)
+    assert isinstance(print_details, bool)
+
+    log_method_execution_time(log_funcname())
+
+    from sklearn.utils.testing import all_estimators
+    import sklearn.metrics
+    import time
+    from src.util.acq_util import RANDOM_SEED
+
+    # https://stackoverflow.com/questions/42160313/how-to-list-all-classification-regression-clustering-algorithms-in-scikit-learn
+    #from xgboost import XGBClassifier
+    #models.append(('XGBClassifier', XGBClassifier()))
+
+    models = all_estimators(type_filter='classifier')
+    output_scores_dataset = pd.DataFrame(index=['Precision 0', 'Recall 0', 'F1-Score 0', 'Support 0',
+                                                'Precision 1', 'Recall 1', 'F1-Score 1', 'Support 1'],
+                                         columns=list(zip(*models))[0])
+
+    for name, model in models:
+        if print_details is True:
+            print('------------------------------------------------------------------------------')
+            print(name)
+            print('------------------------------------------------------------------------------')
+
+        if (name == 'MultinomialNB' or name == 'NuSVC' or name == 'RadiusNeighborsClassifier' or name == 'GaussianProcessClassifier'):
+            continue
+
+        model = model()
+        if 'random_state' in model.get_params():
+            model.random_state = 0
+
+        #Fitting the model.
+        model.fit(X_train, y_train)
+
+        #Measuring accuracy.
+        y_train_pred = model.predict(X_train)
+        y_test_pred = model.predict(X_test)
+
+        output_scores_dataset = class_compute_accuracy(y_train, y_train_pred, output_scores_dataset,
+                                                       ['Accuracy on the train set', name], print_details)
+        output_scores_dataset = class_compute_accuracy(y_test, y_test_pred, output_scores_dataset,
+                                                       ['Accuracy on the test set', name], print_details)
+
+        #Plotting confusion matrix.
+        output_scores_dataset = class_compute_plot_confusion_matrix(y_test, y_test_pred, output_scores_dataset, name, print_details)
+
+        #Showing classification report.
+        if print_details is True:
+            print(sklearn.metrics.classification_report(y_test, y_test_pred))
+
+        # Printing scores to output dataset.
+        output_scores_dataset = class_compute_recall_precision_f1(y_test, y_test_pred, output_scores_dataset, name)
+
+    # Can use idxmax with axis=1 to find the column with the greatest value on each row.
+    output_scores_dataset['Max Value'] = output_scores_dataset.apply(max, axis=1)
+    #output_scores_dataset['Max Classifier'] = output_scores_dataset.idxmax(axis=1)
+
+    if print_details is True:
+        output_scores_dataset.to_csv('output_scores' + '.csv')
+
+    return output_scores_dataset
 
 def train_test_split_for_classification(dataset, test_size, random_state):
     """
