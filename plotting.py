@@ -9,6 +9,26 @@ import seaborn as sns
 # PLOTTING METHODS
 #############################################################################################################
 
+def get_decision_tree_image(model, features, save_png=True):
+    """
+    Show the tree of tree classifier and save the tree in png
+    """
+     from graphviz import Source
+    from sklearn import tree
+    graph = Source(tree.export_graphviz(model,
+                                        out_file=None,
+                                        feature_names=features,
+                                        filled=True,
+                                        rounded=True,
+                                        special_characters=True,
+                                        class_names=['bad', 'good']))
+    png_bytes = graph.pipe(format='png')
+
+    if save_png:
+        with open('dtree_pipe.png', 'wb') as tree_file:
+            tree_file.write(png_bytes)
+    return graph
+
 def plot_cm2inch(*tupl):
     """
     Specify figure size in centimeter in matplotlib
@@ -21,6 +41,68 @@ def plot_cm2inch(*tupl):
         return tuple(i/inch for i in tupl[0])
     return tuple(i/inch for i in tupl)
 
+def plot_all_two_features_scatter_plot(dataset, feature_names):
+    """
+    This method generates scatter plots for all combinations of features present in feature_names which is a list.
+    Useful if there is a large number of features to inspect the scatter plots, find correlations, outliers etc.
+    """
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+    assert isinstance(feature_names, (list, tuple))
+
+    for feature_name1 in feature_names:
+        if feature_name1 not in dataset:
+            log_print('Error: ' + feature_name1 + ' not in dataset.')
+            continue
+
+        for feature_name2 in feature_names:
+            if feature_name1 == feature_name2:
+                continue
+
+            if feature_name2 not in dataset:
+                log_print('Error: ' + feature_name2 + ' not in dataset.')
+                continue
+
+            plot_two_features_scatter(dataset, feature_name1, feature_name2)
+
+def plot_two_features_scatter(dataset, feature_x, feature_y, label, xlim=None, ylim=None):
+    """
+    Args:
+        dataset: Dataset with features to plot
+        featureX: Feature in axis X
+        featureY: Feature in axis Y
+    """
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+    assert isinstance(feature_x, str)
+    assert isinstance(feature_y, str)
+    assert xlim is None or isinstance(xlim, (int, float))
+    assert ylim is None or isinstance(ylim, (int, float))
+
+
+    plt.scatter(dataset[dataset[label] == 0][feature_x], dataset[dataset[label] == 0][feature_y],
+                marker='.', c='blue', label='negatitve')
+    plt.scatter(dataset[dataset[label] == 1][feature_x], dataset[dataset[label] == 1][feature_y],
+                marker='.', c='black', label='positive')
+    plt.legend()
+
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+    plt.xlabel(feature_x)
+    plt.ylabel(feature_y)
+    plt.show()
+
+def plot_classifier_comparison(cross_validation_results, names):
+    """
+    Boxplot the results of cross validation of any classifiers to visual comparison
+    """
+    fig = plt.figure()
+    fig.suptitle('Comparison')
+    ax = fig.add_subplot(111)
+    plt.boxplot(cross_validation_results)
+    ax.set_xticklabels(names)
+    plt.xticks(rotation=90)
+    plt.grid(True)
+    plt.show()
+    
 def plot_graphical_exploratory_datanalysis(dataset, figsize=(6,4)):
     """
     Plots the correlation matrix, histogram and a heatmap.
@@ -252,6 +334,57 @@ def plot_decision_boundary(X_train, y_train, model, name, figsize=(6,4)):
     plt.title("Decision Boundary {}".format(name))
     plt.scatter(xs, ys, c=y_train, s=40)
 
+def plot_decision_region(X, y, model, features, figsize=(6,4)):
+    """
+    Plot the decision region of the model for two features
+    """
+    from mlxtend.plotting import plot_decision_regions
+
+    plt.figure(figsize=figsize)
+    plt.title('Decision Regions')
+    i = 331
+    for f1, f2 in zip(*[iter(features)]*2):
+        x_feat = X[[f1, f2]]
+        model.fit(x_feat, y)
+        plt.subplot(i)
+        i = i+1
+
+        # Plotting decision regions
+        plot_decision_regions(x_feat.as_matrix(), y.as_matrix(), clf=model,
+                              res=0.02)
+        # Adding axes annotations
+        plt.xlabel(f1)
+        plt.ylabel(f2)
+        plt.title(f1+','+f2)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+def plot_decision_region_grid(x, y, features, classifiers, labels):
+    """
+    Plot decision regions as a 4x4 grid.
+    """
+    from mlxtend.plotting import plot_decision_regions
+    import matplotlib.gridspec as gridspec
+
+    feature1 = features[0]
+    feature2 = features[1]
+
+    gs = gridspec.GridSpec(2, 2)
+
+    _ = plt.figure(figsize=(10, 8))
+
+    x_feat = x[[feature1, feature2]]
+
+    for clf, lab, grd in zip(classifiers, labels, itertools.product([0, 1], repeat=2)):
+
+        clf.fit(x_feat, y)
+        _ = plt.subplot(gs[grd[0], grd[1]])
+        _ = plot_decision_regions(x_feat.as_matrix(), y.as_matrix(), clf=clf, legend=2)
+        plt.title(lab)
+
+    plt.show()
+
 def plot_distplot(dataset, feature_name, figsize=(6,4)):
     """
     Plot distplot (flexibly plot a univariate distribution of observations) of feature from dataset.
@@ -380,6 +513,35 @@ def plot_learning_curve(X_train, y_train, model, modename, figsize=(6,4)):
     plt.grid()
     plt.show()
 
+def plot_precision_and_recall_curve(fitted_model, X_test, y_test):
+
+    """
+    Plots precision and recall curve.
+
+    http://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html#plot-the-precision-recall-curve
+    """
+
+    y_score = fitted_model.predict_proba(X_test)
+    y_score = y_score[:, 1]
+
+    from sklearn.metrics import average_precision_score
+    average_precision = average_precision_score(y_test, y_score)
+
+    from sklearn.metrics import precision_recall_curve
+
+    precision, recall, _ = precision_recall_curve(y_test, y_score)
+
+    plt.figure()
+    plt.step(recall, precision, color='b', alpha=0.2, where='post')
+    plt.fill_between(recall, precision, step='post', alpha=0.2, color='b')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(average_precision))
+    plt.show()
+
 def plot_scatter_against_feature(dataset, feature_name, figsize=g_figsize_large, reg_fit=True):
     """
     This method plots scatter between all numeric features against feature_name
@@ -471,6 +633,35 @@ def plot_two_value_counts_barh(dataset, feature_names, quantity_data=-1, figsize
                 dataset[feature].value_counts().plot(kind='barh', figsize=figsize, ax=axs[i])
             else:
                 dataset[feature].value_counts()[:quantity_data].plot(kind='barh', figsize=figsize, ax=axs[i])
+
+def plot_validation_curve(x_train, y_train, model, model_name, params):
+    """
+    Plot the validation curve by determining training and test scores for varying parameters values
+    """
+    assert isinstance(x_train, pd.core.frame.DataFrame)
+    assert isinstance(y_train, (pd.core.frame.DataFrame, pd.core.series.Series))
+
+    from sklearn.model_selection import validation_curve
+
+    param_name = params[0]
+    param_range = params[1]
+    train_scores, test_scores = validation_curve(model, x_train, y_train, param_name,
+                                                 param_range, cv=5, scoring='f1')
+
+    train_scores_mean = np.mean(train_scores, axis=1)
+    #train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    #test_scores_std = np.std(test_scores, axis=1)
+
+    plt.title("Validation Curve {}".format(model_name))
+    plt.xlabel(param_name)
+    plt.ylabel("F1-Score")
+    plt.ylim(0.0, 1.1)
+    plt.plot(param_range, train_scores_mean, label="Training score", color="darkorange")
+    plt.plot(param_range, test_scores_mean, label="Cross-validation score", color="navy")
+    plt.legend(loc="best")
+    plt.xticks(param_range)
+    plt.show()
 
 def plot_value_counts_barh(dataset, feature_name, quantity_data=-1, figsize=(6,4)):
     """
