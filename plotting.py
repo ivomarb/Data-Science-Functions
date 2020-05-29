@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+FIGURE_SIZE = (6,4)
+
 #############################################################################################################
 # PLOTTING METHODS
 #############################################################################################################
@@ -13,7 +15,7 @@ def get_decision_tree_image(model, features, save_png=True):
     """
     Show the tree of tree classifier and save the tree in png
     """
-     from graphviz import Source
+    from graphviz import Source
     from sklearn import tree
     graph = Source(tree.export_graphviz(model,
                                         out_file=None,
@@ -103,7 +105,7 @@ def plot_classifier_comparison(cross_validation_results, names):
     plt.grid(True)
     plt.show()
     
-def plot_graphical_exploratory_datanalysis(dataset, figsize=(6,4)):
+def plot_graphical_exploratory_datanalysis(dataset, figsize=FIGURE_SIZE):
     """
     Plots the correlation matrix, histogram and a heatmap.
     """
@@ -125,8 +127,7 @@ def plot_graphical_exploratory_datanalysis(dataset, figsize=(6,4)):
     g.map_offdiag(sns.kdeplot, cmap="Blues_d", n_levels=6)
     ax = sns.heatmap(dataset, annot=True, diag_names=True)
 
-def plot_heatmap(AUC, title, xlabel, ylabel, xticklabels, yticklabels, figure_width=40,
-                 figure_height=20, correct_orientation=False, cmap='RdBu'):
+def plot_heatmap(AUC, title, xlabel, ylabel, xticklabels, yticklabels, figure_width=40, figure_height=20, correct_orientation=False, cmap='RdBu'):
     """
     Inspired by:
     - https://stackoverflow.com/a/16124677/395857
@@ -179,7 +180,7 @@ def plot_heatmap(AUC, title, xlabel, ylabel, xticklabels, yticklabels, figure_wi
     fig = plt.gcf()
     fig.set_size_inches(plot_cm2inch(figure_width, figure_height))
 
-def plot_boxplot_and_density_individually_with_seaborn(dataset, feature_names, figsize=(6,4)):
+def plot_boxplot_and_density_individually_with_seaborn(dataset, feature_names, figsize=FIGURE_SIZE):
     """
     Seaborn produces high quality plots.
     """
@@ -199,7 +200,7 @@ def plot_boxplot_and_density_individually_with_seaborn(dataset, feature_names, f
             plt.xlim(dataset[name].min(), dataset[name].max()*1.1)
             sns.boxplot(x=dataset[name])
 
-def plot_boxplot_and_histogram_individually(dataset, feature_names, figsize=(6,4)):
+def plot_boxplot_and_histogram_individually(dataset, feature_names, figsize=FIGURE_SIZE):
 
     """
     Plots a boxplot and histograme for feature names contained in feature_names of dataset.
@@ -214,8 +215,7 @@ def plot_boxplot_and_histogram_individually(dataset, feature_names, figsize=(6,4
             dataset.hist(column=name, bins=50)
             plt.show()
 
-def plot_classification_report(classification_report, title='Classification report ', cmap='RdBu',
-                               figsize=(6,4))):
+def plot_classification_report(classification_report, title='Classification report ', cmap='RdBu', figsize=FIGURE_SIZE)):
     """
     Plot scikit-learn classification report.
     Extension based on https://stackoverflow.com/a/31689645/395857
@@ -250,7 +250,7 @@ def plot_classification_report(classification_report, title='Classification repo
     plot_heatmap(np.array(plotMat), title, xlabel, ylabel, xticklabels, yticklabels,
                  figure_width, figure_height, correct_orientation, cmap=cmap)
 
-def plot_confusion_matrix(cm, classes, title='Confusion matrix', cmap=plt.cm.Blues, figsize=(6,4)):
+def plot_confusion_matrix(cm, classes, title='Confusion matrix', cmap=plt.cm.Blues, figsize=FIGURE_SIZE):
     """
     This function prints and plots the confusion matrix.
     http://scikit-learn.org/stable/auto_examples/modeselection/plot_confusion_matrix.html#sphx-glr-auto-examples-
@@ -279,7 +279,7 @@ def plot_confusion_matrix(cm, classes, title='Confusion matrix', cmap=plt.cm.Blu
     plt.xlabel('Predicted label')
     plt.show()
 
-def plot_correlation_with_feature(dataset, feature_name, figsize=(6,4)):
+def plot_correlation_with_feature(dataset, feature_name, figsize=FIGURE_SIZE):
     """
     This methods plot the correlation between all numeric features with feature_name
     """
@@ -293,7 +293,7 @@ def plot_correlation_with_feature(dataset, feature_name, figsize=(6,4)):
         plt.figure(figsize=figsize)
         sns.barplot(corr[feature_name][1:], corr.index[1:], orient='h')
 
-def plot_decision_boundary(X_train, y_train, model, name, figsize=(6,4)):
+def plot_decision_boundary(X_train, y_train, model, name, figsize=FIGURE_SIZE):
     """
     Plots a decision boundary for a classification problem. The number of componentes is reduced to two
     using TruncatedSVD.
@@ -334,7 +334,7 @@ def plot_decision_boundary(X_train, y_train, model, name, figsize=(6,4)):
     plt.title("Decision Boundary {}".format(name))
     plt.scatter(xs, ys, c=y_train, s=40)
 
-def plot_decision_region(X, y, model, features, figsize=(6,4)):
+def plot_decision_region(X, y, model, features, figsize=FIGURE_SIZE):
     """
     Plot the decision region of the model for two features
     """
@@ -350,8 +350,7 @@ def plot_decision_region(X, y, model, features, figsize=(6,4)):
         i = i+1
 
         # Plotting decision regions
-        plot_decision_regions(x_feat.as_matrix(), y.as_matrix(), clf=model,
-                              res=0.02)
+        plot_decision_regions(x_feat.as_matrix(), y.as_matrix(), clf=model, res=0.02)
         # Adding axes annotations
         plt.xlabel(f1)
         plt.ylabel(f2)
@@ -385,7 +384,7 @@ def plot_decision_region_grid(x, y, features, classifiers, labels):
 
     plt.show()
 
-def plot_distplot(dataset, feature_name, figsize=(6,4)):
+def plot_distplot(dataset, feature_name, figsize=FIGURE_SIZE):
     """
     Plot distplot (flexibly plot a univariate distribution of observations) of feature from dataset.
     This function combines the matplotlib hist function
@@ -415,7 +414,7 @@ def plot_distplot(dataset, feature_name, figsize=(6,4)):
         print("Skewness: %f" % dataset[feature_name].skew(),False)
         print("Kurtosis: %f" % dataset[feature_name].kurt(),False)
 
-def plot_feature_importance(model, feature_names, num_of_features_to_show, figsize=(6,4)):
+def plot_feature_importance(model, feature_names, num_of_features_to_show, figsize=FIGURE_SIZE):
     """
     Plot the importance of features for the model
 
@@ -441,7 +440,7 @@ def plot_feature_importance(model, feature_names, num_of_features_to_show, figsi
     plt.xlim([-1, len(indices)])
     plt.show()
 
-def plot_generate_all_combinations_of_two_features_scatter_plot(dataset, feature_names, figsize=(6,4)):
+def plot_generate_all_combinations_of_two_features_scatter_plot(dataset, feature_names, figsize=FIGURE_SIZE):
     """
     This method generates scatter plots for all combinations of features present in feature_names which is a list.
     Useful if there is a large number of features to inspect the scatter plots, find correlations, outliers etc.
@@ -464,8 +463,7 @@ def plot_generate_all_combinations_of_two_features_scatter_plot(dataset, feature
 
             plot_two_features_scatter(dataset, feature_name1, feature_name2)
 
-def plot_latitude_and_longitude_on_map(dataset, latitude_feature, longitude_feature,
-                                       map_location='../images/california.png', figsize=(6,4)):
+def plot_latitude_and_longitude_on_map(dataset, latitude_feature, longitude_feature, map_location='../images/california.png', figsize=FIGURE_SIZE):
     """
     Plot latitude and longitude data over california map picture
 
@@ -490,7 +488,7 @@ def plot_latitude_and_longitude_on_map(dataset, latitude_feature, longitude_feat
     plt.xlabel("Longitude", fontsize=14)
 
 # http://scikit-learn.org/stable/modules/learning_curve.html#learning-curve
-def plot_learning_curve(X_train, y_train, model, modename, figsize=(6,4)):
+def plot_learning_curve(X_train, y_train, model, modename, figsize=FIGURE_SIZE):
     """
     Plots a learning curve for a especific model and datasets X_train and y_train.
     """
@@ -563,7 +561,7 @@ def plot_scatter_against_feature(dataset, feature_name, figsize=g_figsize_large,
         g.fig.tight_layout()
         plt.show()
 
-def plot_scatter_and_boxplot(dataset, label, feature, figsize=(6,4)):
+def plot_scatter_and_boxplot(dataset, label, feature, figsize=FIGURE_SIZE):
     """
     This method plots scatter between the feature and the label and the boxplot of the feature
     """
@@ -574,8 +572,7 @@ def plot_scatter_and_boxplot(dataset, label, feature, figsize=(6,4)):
     plt.subplot(1, 2, 2)
     sns.boxplot(x=dataset[feature])
 
-def plot_two_features_scatter(dataset, featureX, featureY, arrayX=None, arrayY=None,
-                              xlim=None, ylim=None, classification=True):
+def plot_two_features_scatter(dataset, featureX, featureY, arrayX=None, arrayY=None, xlim=None, ylim=None, classification=True):
     """
     Args:
         dataset: Dataset with features to plot
@@ -614,7 +611,7 @@ def plot_two_features_scatter(dataset, featureX, featureY, arrayX=None, arrayY=N
     plt.ylabel(featureY)
     plt.show()
 
-def plot_two_value_counts_barh(dataset, feature_names, quantity_data=-1, figsize=(6,4)):
+def plot_two_value_counts_barh(dataset, feature_names, quantity_data=-1, figsize=FIGURE_SIZE):
     """
     This method plots the value counts of two or more features
     """
@@ -663,7 +660,7 @@ def plot_validation_curve(x_train, y_train, model, model_name, params):
     plt.xticks(param_range)
     plt.show()
 
-def plot_value_counts_barh(dataset, feature_name, quantity_data=-1, figsize=(6,4)):
+def plot_value_counts_barh(dataset, feature_name, quantity_data=-1, figsize=FIGURE_SIZE):
     """
     This method plots the value counts of one feature
     """
