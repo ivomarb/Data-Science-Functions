@@ -2,6 +2,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+SEED = 0
+
 #############################################################################################################
 # CLASSIFICATION METHODS
 #############################################################################################################
@@ -24,9 +26,9 @@ def cross_validation(model, name, X, y):
 
     scoring = 'f1'
     if 'random_state' in model.get_params():
-        model.random_state = 0
+        model.random_state = SEED
 
-    kfold = model_selection.KFold(n_splits=10, random_state=0)
+    kfold = model_selection.KFold(n_splits=10, random_state=SEED)
     cv_results = model_selection.cross_val_score(model, X, y, cv=kfold, scoring=scoring)
     msg = "%s: %.3f (%.3f)" % (name, cv_results.mean(), cv_results.std())
     print(msg)
@@ -60,9 +62,9 @@ def cv_compare_all_classifiers(X_train, y_train):
         if name != 'XGBClassifier':
             model = model()
         if 'random_state' in model.get_params():
-            model.random_state = 0
+            model.random_state = SEED
 
-        kfold = model_selection.KFold(n_splits=10, random_state=0)
+        kfold = model_selection.KFold(n_splits=10, random_state=SEED)
         cv_results = model_selection.cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
 
         results.append(cv_results)
@@ -90,9 +92,9 @@ def cv_compare_classifiers(models, names, X_train, y_train):
     results = []
     for name, model in zip(names, models):
         if 'random_state' in model.get_params():
-            model.random_state = 0
+            model.random_state = SEED
 
-        kfold = model_selection.KFold(n_splits=10, random_state=0)
+        kfold = model_selection.KFold(n_splits=10, random_state=SEED)
         cv_results = model_selection.cross_val_score(model, X_train, y_train, cv=kfold, scoring=scoring)
 
         results.append(cv_results)
@@ -279,8 +281,8 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_output_scores_to
     models.append(('BernoulliNB',                   BernoulliNB()))
     models.append(('CalibratedClassifierCV',        CalibratedClassifierCV()))
     models.append(('DPGMM',                         DPGMM()))
-    models.append(('DecisionTreeClassifier',        DecisionTreeClassifier(random_state=0)))
-    models.append(('ExtraTreesClassifier',          ExtraTreesClassifier(random_state=0)))
+    models.append(('DecisionTreeClassifier',        DecisionTreeClassifier(random_state=SEED)))
+    models.append(('ExtraTreesClassifier',          ExtraTreesClassifier(random_state=SEED)))
     models.append(('GMM',                           GMM()))
     models.append(('GaussianMixture',               GaussianMixture()))
     models.append(('GaussianNB',                    GaussianNB()))
@@ -296,7 +298,7 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_output_scores_to
     #models.append(('MultinomialNB', MultinomialNB()))
     #models.append(('NuSVC', NuSVC()))
     models.append(('QuadraticDiscriminantAnalysis', QuadraticDiscriminantAnalysis()))
-    models.append(('RandomForestClassifier',        RandomForestClassifier(random_state=g_seed)))
+    models.append(('RandomForestClassifier',        RandomForestClassifier(random_state=SEED)))
     models.append(('SGDClassifier',                 SGDClassifier()))
     models.append(('SVC',                           SVC()))
     models.append(('VBGMM',                         VBGMM()))
@@ -354,7 +356,7 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_details=True):
 
         model = model()
         if 'random_state' in model.get_params():
-            model.random_state = 0
+            model.random_state = SEED
 
         #Fitting the model.
         model.fit(X_train, y_train)
@@ -387,7 +389,7 @@ def run_all_classifiers(X_train, X_test, y_train, y_test, print_details=True):
 
     return output_scores_dataset
 
-def train_test_split_for_classification(dataset, label, test_size, random_state):
+def train_test_split_for_classification(dataset, label, test_size, random_state=SEED):
     """
     Selects X and y, considering that y has been renamed to label.
     """
@@ -399,8 +401,7 @@ def train_test_split_for_classification(dataset, label, test_size, random_state)
 
     X = dataset.loc[:, dataset.columns != label]
     y = dataset[g_label]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state,
-                                                        stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     log_print('X_train: {}'.format(X_train.shape))
     log_print('y_train: {}'.format(y_train.shape))
     log_print('X_test:  {}'.format(X_test.shape))
