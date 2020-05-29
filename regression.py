@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 
+SEED = 0
+
 #############################################################################################################
 # REGRESSION METHODS
 #############################################################################################################
@@ -62,8 +64,8 @@ def save_best_regression_model(X_train, y_train):
     best_params = {'min_samples_leaf': 1, 'min_samples_split': 2, 'n_estimators': 500}
     model_name = 'randomforestregressor'
 
-    model = ensemble.RandomForestRegressor(random_state=0, **best_params)
-    model = reg_train_regressor(model, model_name, X_train, y_train)
+    model = ensemble.RandomForestRegressor(random_state=SEED, **best_params)
+    model = train_regressor(model, model_name, X_train, y_train)
     util_save_model_pkl(model, model_name+'.pkl')
 
 def train_regressor(model, model_name, X_train, y_train):
@@ -107,12 +109,12 @@ def train_test_regressor(model, model_name, X_train, X_test, y_train, y_test):
     """
     import sklearn.base
 
-    assert isinstance(model, sklearn.base.RegressorMixin)
-    assert isinstance(model_name, object)
-    assert isinstance(X_train, (np.ndarray, np.generic, pd.core.frame.DataFrame))
-    assert isinstance(X_test, (np.ndarray, np.generic, pd.core.frame.DataFrame))
-    assert isinstance(y_train, (np.ndarray, np.generic,pd.core.series.Series))
-    assert isinstance(y_test, (np.ndarray, np.generic,pd.core.series.Series))
+    assert isinstance(model,       sklearn.base.RegressorMixin)
+    assert isinstance(model_name,  object)
+    assert isinstance(X_train,    (np.ndarray, np.generic, pd.core.frame.DataFrame))
+    assert isinstance(X_test,     (np.ndarray, np.generic, pd.core.frame.DataFrame))
+    assert isinstance(y_train,    (np.ndarray, np.generic,pd.core.series.Series))
+    assert isinstance(y_test,     (np.ndarray, np.generic,pd.core.series.Series))
 
     print('------------------------------------------------------------------------------')
     print(model_name)
@@ -128,7 +130,7 @@ def train_test_regressor(model, model_name, X_train, X_test, y_train, y_test):
     y_pred = model.predict(X_test)
     print_results(y_test, y_pred)
 
-def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=0):
+def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=SEED):
     """
     Train, test and print the results of most available regressors presented in sklearn.
 
@@ -151,25 +153,25 @@ def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=0):
     from sklearn import neural_network
 
     models = []
-    models.append(("BayesianRidge", linear_model.BayesianRidge()))
-    models.append(("ElasticNet", linear_model.ElasticNet()))
-    models.append(("HuberRegressor", linear_model.HuberRegressor()))
-    models.append(("Lars", linear_model.Lars()))
-    models.append(("Lasso", linear_model.Lasso()))
-    models.append(("LassoLars", linear_model.LassoLars()))
-    models.append(("LinearRegression", linear_model.LinearRegression()))
-    models.append(("OrthogonalMatchingPursuit", linear_model.OrthogonalMatchingPursuit()))
+    models.append(("BayesianRidge",              linear_model.BayesianRidge()))
+    models.append(("ElasticNet",                 linear_model.ElasticNet()))
+    models.append(("HuberRegressor",             linear_model.HuberRegressor()))
+    models.append(("Lars",                       linear_model.Lars()))
+    models.append(("Lasso",                      linear_model.Lasso()))
+    models.append(("LassoLars",                  linear_model.LassoLars()))
+    models.append(("LinearRegression",           linear_model.LinearRegression()))
+    models.append(("OrthogonalMatchingPursuit",  linear_model.OrthogonalMatchingPursuit()))
     models.append(("PassiveAggressiveRegressor", linear_model.PassiveAggressiveRegressor()))
-    models.append(("Ridge", linear_model.Ridge()))
-    models.append(("SGDRegressor", linear_model.SGDRegressor()))
-    models.append(("AdaBoostRegressor", ensemble.AdaBoostRegressor(random_state=seed)))
-    models.append(("BaggingRegressor", ensemble.BaggingRegressor(random_state=seed)))
-    models.append(("ExtraTreesRegressor", ensemble.ExtraTreesRegressor(random_state=seed)))
-    models.append(("GradientBoostingRegressor", ensemble.GradientBoostingRegressor(random_state=seed)))
-    models.append(("RandomForestRegressor", ensemble.RandomForestRegressor(random_state=seed)))
-    models.append(("DecisionTreeRegressor", tree.DecisionTreeRegressor(random_state=seed)))
-    models.append(("KNeighborsRegressor", neighbors.KNeighborsRegressor()))
-    models.append(("MLPRegressor", neural_network.MLPRegressor()))
+    models.append(("Ridge",                      linear_model.Ridge()))
+    models.append(("SGDRegressor",               linear_model.SGDRegressor()))
+    models.append(("AdaBoostRegressor",          ensemble.AdaBoostRegressor(random_state=seed)))
+    models.append(("BaggingRegressor",           ensemble.BaggingRegressor(random_state=seed)))
+    models.append(("ExtraTreesRegressor",        ensemble.ExtraTreesRegressor(random_state=seed)))
+    models.append(("GradientBoostingRegressor",  ensemble.GradientBoostingRegressor(random_state=seed)))
+    models.append(("RandomForestRegressor",      ensemble.RandomForestRegressor(random_state=seed)))
+    models.append(("DecisionTreeRegressor",      tree.DecisionTreeRegressor(random_state=seed)))
+    models.append(("KNeighborsRegressor",        neighbors.KNeighborsRegressor()))
+    models.append(("MLPRegressor",               neural_network.MLPRegressor()))
 
     best_mean_absolute_percentage_error = 100
     best_model = ''
@@ -189,8 +191,8 @@ def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=0):
         y_pred = model.predict(X_test)
         print_results(y_test, y_pred)
 
-        mean_absolute_percentage_error = mean_absolute_percentage_error(y_test, y_pred)
-        if  mean_absolute_percentage_error < best_mean_absolute_percentage_error:
+        mean_absolute_percentage_error_value = mean_absolute_percentage_error(y_test, y_pred)
+        if  mean_absolute_percentage_error_value < best_mean_absolute_percentage_error:
             best_mean_absolute_percentage_error = mean_absolute_percentage_error
             best_model = name
 
@@ -199,7 +201,7 @@ def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=0):
     print('Best mean absolute percentage error: ' + str(best_mean_absolute_percentage_error))
     print('------------------------------------------------------------------------------')
 
-def train_test_split_for_regression_dataframe(dataset, test_size=0.2, random_state=0):
+def train_test_split_for_regression_dataframe(dataset, test_size=0.2, random_state=SEED):
     """
     Split the dataset into train and test sets
 
@@ -228,7 +230,7 @@ def train_test_split_for_regression_dataframe(dataset, test_size=0.2, random_sta
     print('y_test: '+  str(y_test.shape))
     return(X_train, X_test, y_train, y_test)
 
-def train_test_split_for_regression(X, y, test_size=0.2, random_state=0):
+def train_test_split_for_regression(X, y, test_size=0.2, random_state=SEED):
     """
     Split the dataset into train and test sets
 
@@ -245,12 +247,11 @@ def train_test_split_for_regression(X, y, test_size=0.2, random_state=0):
     assert isinstance(random_state, int)
 
     from sklearn.model_selection import train_test_split
-    from libs_global import g_listing_info__list_price
-    
+      
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
     print('X_train: '+ str(X_train.shape))
     print('y_train: '+ str(y_train.shape))
-    print('X_test: '+  str(X_test.shape))
-    print('y_test: '+  str(y_test.shape))
+    print('X_test: ' + str(X_test.shape))
+    print('y_test: ' + str(y_test.shape))
     return(X_train, X_test, y_train, y_test)
