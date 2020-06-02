@@ -65,6 +65,23 @@ def plot_all_two_features_scatter_plot(dataset, feature_names):
                 continue
 
             plot_two_features_scatter(dataset, feature_name1, feature_name2)
+            
+def plot_diagonal_correlation_matrix(corr, fig_size =  (7,5)):
+    """
+    Plot a diagonal heatmap of a correlation matrix.
+    """
+    
+    # Generate a mask for the upper triangle
+    mask = np.triu(np.ones_like(corr, dtype=np.bool))
+
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=fig_size)
+
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+
+    # Draw the heatmap with the mask and correct aspect ratio
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0, square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
 def plot_two_features_scatter(dataset, feature_x, feature_y, label, xlim=None, ylim=None):
     """
