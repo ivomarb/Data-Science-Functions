@@ -1,3 +1,52 @@
+def equalize_classes_by_frac_of_minority_class(X, y, label, frac=1.0):
+    """
+    Equalize classes by fraction of minority class.
+    """
+    import pandas as pd
+    import numpy as np
+    
+    assert isinstance(X, pd.core.frame.DataFrame)
+    assert isinstance(y, pd.core.frame.DataFrame)
+    assert isinstance(frac, float)
+
+    num_neg = (y == 0).sum()
+    num_pos = (y == 1).sum()
+    num_min = np.min([num_neg, num_pos])
+    num_max = np.max([num_neg, num_pos])
+
+    dataset_full = X
+    dataset_full[label] = y
+
+    frac_to_remove = 1 - frac * num_min / num_max
+
+    if num_neg > num_pos:
+        dataset_full.drop(dataset_full.query(label == 0).sample(a_frac=frac_to_remove).index, inplace=True)
+    else:
+        dataset_full.drop(dataset_full.query(label == 1).sample(a_frac=frac_to_remove).index, inplace=True)
+
+    
+    y = dataset_full[label]
+    X = dataset_full.loc[:, dataset_full.columns != label]
+
+    return (X, y)
+
+def get_numerical_columns_names(dataset):
+    """
+    Get the names of columns with numerical features
+
+    Args:
+        dataset (DataFrame): data
+
+    Returns:
+        list: list with names of numerical columns
+    """
+    import pandas as pd
+    
+    assert isinstance(dataset, pd.core.frame.DataFrame)
+
+    numerical_features = dataset.select_dtypes(include=["int64", "float64"]).columns
+    return numerical_features
+
 def numeric_exploratory_data_analysis(dataset, generate_csv=False, print_statistical_summary = False, generate_unique_values = True, dataset_name = ''):
     """
     Outputs a pandas dataframe with the dtypes, nan and zero value counts of all features. 
@@ -44,23 +93,6 @@ def numeric_exploratory_data_analysis(dataset, generate_csv=False, print_statist
 
     return numeric_analysis
 
-def get_numerical_columns_names(dataset):
-    """
-    Get the names of columns with numerical features
-
-    Args:
-        dataset (DataFrame): data
-
-    Returns:
-        list: list with names of numerical columns
-    """
-    import pandas as pd
-    
-    assert isinstance(dataset, pd.core.frame.DataFrame)
-
-    numerical_features = dataset.select_dtypes(include=["int64", "float64"]).columns
-    return numerical_features
-
 def replace_zero_values_to_nan(dataset, feature_names):
     """
     Replace all features present in feature_names with 0 to np.NaN.
@@ -101,37 +133,30 @@ def replace_nan_values_to_constant(dataset, feature_names, constant=0):
 
     return dataset
 
-def equalize_classes_by_frac_of_minority_class(X, y, label, frac=1.0):
+def show_wordcloud(data, title = None):
     """
-    Equalize classes by fraction of minority class.
+    Plots a wordcloud of the data.
     """
-    import pandas as pd
-    import numpy as np
+    import matplotlib.pyplot as plt
+    from wordcloud import WordCloud, STOPWORDS
     
-    assert isinstance(X, pd.core.frame.DataFrame)
-    assert isinstance(y, pd.core.frame.DataFrame)
-    assert isinstance(frac, float)
+    wordcloud = WordCloud(
+        background_color='white',
+        stopwords=STOPWORDS,
+        max_words=100,
+        max_font_size=40, 
+        scale=3,
+        random_state=1).generate(str(data))
 
-    num_neg = (y == 0).sum()
-    num_pos = (y == 1).sum()
-    num_min = np.min([num_neg, num_pos])
-    num_max = np.max([num_neg, num_pos])
+    fig = plt.figure(1, figsize=(12, 12))
+    plt.axis('off')
+    if title: 
+        fig.suptitle(title, fontsize=20)
+        fig.subplots_adjust(top=2.3)
 
-    dataset_full = X
-    dataset_full[label] = y
-
-    frac_to_remove = 1 - frac * num_min / num_max
-
-    if num_neg > num_pos:
-        dataset_full.drop(dataset_full.query(label == 0).sample(a_frac=frac_to_remove).index, inplace=True)
-    else:
-        dataset_full.drop(dataset_full.query(label == 1).sample(a_frac=frac_to_remove).index, inplace=True)
-
-    
-    y = dataset_full[label]
-    X = dataset_full.loc[:, dataset_full.columns != label]
-
-    return (X, y)
+    plt.imshow(wordcloud)
+    plt.show()
+    return wordcloud
 
 def util_save_model_pkl(model, model_name):
     """
