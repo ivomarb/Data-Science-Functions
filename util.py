@@ -47,6 +47,19 @@ def get_numerical_columns_names(dataset):
     numerical_features = dataset.select_dtypes(include=["int64", "float64"]).columns
     return numerical_features
 
+def missing_values_report(df_):
+    """
+    Return a dataframe with the count of missing values and the ratio.
+    """
+    import pandas as pd
+    
+    count_missing = df_.isnull().sum().values
+    ratio_missing = count_missing / df_.shape[0]
+
+    return pd.DataFrame(data = {'count_missing': count_missing,
+                                'ratio_missing': ratio_missing},
+                        index = df_.columns.values).sort_values(by='ratio_missing',ascending=False)
+
 def numeric_exploratory_data_analysis(dataset, generate_csv=False, print_statistical_summary = False, generate_unique_values = True, dataset_name = ''):
     """
     Outputs a pandas dataframe with the dtypes, nan and zero value counts of all features. 
