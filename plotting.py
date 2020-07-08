@@ -76,6 +76,65 @@ def get_decision_tree_image(model, features, save_png=True):
             tree_file.write(png_bytes)
     return graph
 
+def num_vars_dist_plot(df,
+                       var_name,
+                       nbins   = 10,
+                       figsize = (10,5),
+                       color   = 'b',
+                       alpha   = 0.7,
+                      ):
+    """
+    function for hist plotting of numeric variables
+    """
+
+    xmin,xmax = df[var_name].min(),df[var_name].max()
+
+    percent   = 0.0001
+    delta     = xmax - xmin
+    xmin     -= percent*delta
+    xmax     += percent*delta
+
+    bins = np.linspace(xmin, xmax, nbins+1) 
+
+    porcent = 0.05
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+
+    idx = 0
+    n,_,_ = ax[idx].hist(x       = df[var_name],
+                         bins    = bins,
+                         color   = color,
+                         alpha   = alpha,
+                         density = False,
+                        )
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax[idx].set_xlim([bins[0],bins[-1]])
+    ax[idx].set_ylim([0,np.max(n)*(1.0 + porcent)])
+    ax[idx].set_xlabel(var_name)
+    ax[idx].set_ylabel('Occurences')
+    ax[idx].set_title(var_name + ' distribution')
+
+    weights = (100/df[var_name].shape[0])*np.ones(df[var_name].shape[0])
+
+    idx = 1
+    n,_,_ = ax[idx].hist(x       = df[var_name],
+                         bins    = bins,
+                         color   = color,
+                         alpha   = alpha,
+                         density = False,
+                         weights = weights,
+                        )
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax[idx].set_xlim([bins[0],bins[-1]])
+    ax[idx].set_ylim([0,np.max(n)*(1.0 + porcent)])
+    ax[idx].set_xlabel(var_name)
+    ax[idx].set_ylabel('Fractional occurrances (%)')
+    ax[idx].set_title(var_name + ' distribution')
+
+    fig.tight_layout()
+
+    plt.show()
+
 def plot_cm2inch(*tupl):
     """
     Specify figure size in centimeter in matplotlib
