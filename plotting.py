@@ -11,6 +11,51 @@ FIGURE_SIZE = (6,4)
 # PLOTTING METHODS
 #############################################################################################################
 
+def cat_vars_dist_plot(var_counts,
+                       figsize = (10,8),
+                       wi      = 0.45,
+                       color   = 'b',
+                       labels_map = None
+                      ):
+    """
+    function for bar plotting of categorical variables
+    """
+
+    labels      = list(var_counts.index)
+    labels_plot = change_labels(labels,labels_map)
+    
+    values      = list(var_counts.values)
+    values_frac = list(100*var_counts.values/var_counts.values.sum())
+
+    x     = np.arange(len(labels))  # the label locations
+    width = wi  # the width of the bars
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+
+    idx = 0
+    rects = ax[idx].bar(x, values, width,color=color)
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax[idx].set_ylabel('Occurences')
+    ax[idx].set_title(var_counts.name + ' distribution')
+    ax[idx].set_xticks(x)
+    ax[idx].set_xticklabels(labels_plot)
+    # ax.legend()
+    autolabel(rects,ax[idx])
+
+    idx = 1
+    rects = ax[idx].bar(x, values_frac, width,color=color)
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax[idx].set_ylabel('Fraction Occurences (%)')
+    ax[idx].set_title(var_counts.name + ' distribution')
+    ax[idx].set_xticks(x)
+    ax[idx].set_xticklabels(labels_plot)
+    # ax.legend()
+    autolabel(rects,ax[idx])
+
+    fig.tight_layout()
+
+    plt.show()
+
 def get_decision_tree_image(model, features, save_png=True):
     """
     Show the tree of tree classifier and save the tree in png
