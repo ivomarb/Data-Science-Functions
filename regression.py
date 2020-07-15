@@ -201,6 +201,72 @@ def train_test_all_regressors(X_train, X_test, y_train, y_test, seed=SEED):
     print('Best mean absolute percentage error: ' + str(best_mean_absolute_percentage_error))
     print('------------------------------------------------------------------------------')
 
+def train_test_all_regressors_with_cross_validation(X, y, seed=SEED):
+    """
+    Train, test and print the results of most available regressors presented in sklearn using cross validation.
+    Args:
+        X_train (matrix): matrix with features of the training set
+        y_train (list): list of values of target of the training set
+        X_test (matrix): matrix with features of the test set
+        y_test (list): list of values of target of the test set
+    """
+    assert isinstance(X, pd.core.frame.DataFrame)
+    assert isinstance(y, pd.core.series.Series)
+    assert isinstance(seed, int)
+    
+    from sklearn import linear_model
+    from sklearn import tree
+    from sklearn import ensemble
+    from sklearn import neighbors
+    from sklearn import neural_network
+    
+    from sklearn.model_selection import cross_val_score
+
+    models = []
+    models.append(("BayesianRidge",              linear_model.BayesianRidge()))
+    models.append(("ElasticNet",                 linear_model.ElasticNet()))
+    models.append(("HuberRegressor",             linear_model.HuberRegressor()))
+    models.append(("Lars",                       linear_model.Lars()))
+    models.append(("Lasso",                      linear_model.Lasso()))
+    models.append(("LassoLars",                  linear_model.LassoLars()))
+    models.append(("LinearRegression",           linear_model.LinearRegression()))
+    models.append(("OrthogonalMatchingPursuit",  linear_model.OrthogonalMatchingPursuit()))
+    models.append(("PassiveAggressiveRegressor", linear_model.PassiveAggressiveRegressor()))
+    models.append(("Ridge",                      linear_model.Ridge()))
+    models.append(("SGDRegressor",               linear_model.SGDRegressor()))
+    models.append(("AdaBoostRegressor",          ensemble.AdaBoostRegressor(random_state=seed)))
+    models.append(("BaggingRegressor",           ensemble.BaggingRegressor(random_state=seed)))
+    models.append(("ExtraTreesRegressor",        ensemble.ExtraTreesRegressor(random_state=seed)))
+    models.append(("GradientBoostingRegressor",  ensemble.GradientBoostingRegressor(random_state=seed)))
+    models.append(("RandomForestRegressor",      ensemble.RandomForestRegressor(random_state=seed)))
+    models.append(("DecisionTreeRegressor",      tree.DecisionTreeRegressor(random_state=seed)))
+    models.append(("KNeighborsRegressor",        neighbors.KNeighborsRegressor()))
+    models.append(("MLPRegressor",               neural_network.MLPRegressor()))
+
+    best_rmse = 1000000000.0
+    best_model = ''
+
+    for name, model in models:
+        print('------------------------------------------------------------------------------')
+        print(name)
+        print('------------------------------------------------------------------------------')
+
+        scores = cross_val_score(model, X, y, scoring = 'neg_root_mean_squared_error', cv=5)
+        scores = -scores
+        scores_mean = scores.mean()
+        scores_std = scores.std()
+        print("RMSE: %0.3f (+/- %0.2f)" % (scores_mean, scores_std * 2))
+        
+        #mean_absolute_percentage_error_value = mean_absolute_percentage_error(y_test, y_pred)
+        if  scores_mean < best_rmse:
+            best_rmse = scores_mean
+            best_model = name
+
+    print('------------------------------------------------------------------------------')
+    print('Best model: ' + best_model)
+    print('Best RMSE: ' + str(best_rmse))
+    print('------------------------------------------------------------------------------')
+
 def train_test_split_for_regression_dataframe(dataset, test_size=0.2, random_state=SEED):
     """
     Split the dataset into train and test sets
