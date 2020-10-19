@@ -1,3 +1,23 @@
+def apply_box_cox_transform(dataset, column_names):
+    
+    """Apply a box-cox transgormation to every feature in column_names of dataset."""
+    from scipy.special import boxcox1p
+    
+    for column_name in column_names:
+        transform = np.asarray(dataset[column_name].values)
+        dataset[column_name] = boxcox1p(transform, 0)
+        
+    return dataset
+
+def clean_dataset(dataset):
+    
+    """Cleans a pandas dataframe removes NaN and Infinite values."""
+    
+    assert isinstance(dataset, pd.DataFrame), "df needs to be a pd.DataFrame"
+    dataset.dropna(inplace=True)
+    indices_to_keep = ~dataset.isin([np.nan, np.inf, -np.inf]).any(1)
+    return dataset[indices_to_keep].astype(np.float64)
+
 def equalize_classes_by_frac_of_minority_class(X, y, label, frac=1.0):
     """
     Equalize classes by fraction of minority class.
